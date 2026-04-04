@@ -3,9 +3,12 @@ from .models import Reservation, Avis
 
 
 class ReservationSerializer(serializers.ModelSerializer):
+    client = serializers.HiddenField(default=serializers.CurrentUserDefault())
+
     class Meta:
         model = Reservation
         fields = '__all__'
+        read_only_fields = ['date_reservation']
 
 
 class AvisSerializer(serializers.ModelSerializer):

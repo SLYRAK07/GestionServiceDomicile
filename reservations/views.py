@@ -1,12 +1,10 @@
-from django.shortcuts import render
-
-# Create your views here.
-from rest_framework import viewsets, status
+from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from .models import Reservation, Avis
 from .serializers import ReservationSerializer, AvisSerializer
+from .tasks import envoyer_email_reservation
 
 class ReservationViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
@@ -18,11 +16,16 @@ class ReservationViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(client=self.request.user)
 
+    def get_serializer(self, *args, **kwargs):
+        kwargs['context'] = self.get_serializer_context()
+        return super().get_serializer(*args, **kwargs)
+
     @action(detail=True, methods=['post'])
     def confirmer(self, request, pk=None):
         reservation = self.get_object()
         reservation.statut = 'confirmee'
         reservation.save()
+        envoyer_email_reservation('confirmee', reservation.client.email, reservation.id)
         return Response({'message': 'Réservation confirmée'})
 
     @action(detail=True, methods=['post'])
@@ -30,6 +33,7 @@ class ReservationViewSet(viewsets.ModelViewSet):
         reservation = self.get_object()
         reservation.statut = 'annulee'
         reservation.save()
+        envoyer_email_reservation('annulee', reservation.client.email, reservation.id)
         return Response({'message': 'Réservation annulée'})
 
 
@@ -42,3 +46,7 @@ class AvisViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(client=self.request.user)
+
+    def get_serializer(self, *args, **kwargs):
+        kwargs['context'] = self.get_serializer_context()
+        return super().get_serializer(*args, **kwargs)

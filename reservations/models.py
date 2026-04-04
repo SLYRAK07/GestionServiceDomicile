@@ -1,6 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
-
+from django.conf import settings
 
 class Reservation(models.Model):
     STATUT_CHOICES = [
@@ -10,7 +9,7 @@ class Reservation(models.Model):
         ('terminee', 'Terminée'),
     ]
 
-    client = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reservations_client')
+    client = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='reservations_client')
     date_reservation = models.DateTimeField(auto_now_add=True)
     date_service = models.DateTimeField()
     statut = models.CharField(max_length=20, choices=STATUT_CHOICES, default='en_attente')
@@ -21,11 +20,13 @@ class Reservation(models.Model):
 
 
 class Avis(models.Model):
-    client = models.ForeignKey(User, on_delete=models.CASCADE)
+    client = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     reservation = models.OneToOneField(Reservation, on_delete=models.CASCADE)
     note = models.IntegerField()
     commentaire = models.TextField()
     date = models.DateTimeField(auto_now_add=True)
+
+    # TODO: calculer moyenne prestataire
 
     def __str__(self):
         return f"Avis {self.note}/5 par {self.client}"

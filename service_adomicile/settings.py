@@ -44,8 +44,12 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'reservations',
     'chat',
+    'acounts'
 
 ]
+
+AUTH_USER_MODEL = 'acounts.User'
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -85,8 +89,12 @@ ASGI_APPLICATION = 'service_adomicile.asgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'db_servi',
+        'USER': 'postgres',
+        'PASSWORD': 'ismail89Aa',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
 
@@ -158,3 +166,12 @@ CHANNEL_LAYERS = {
         },
     },
 }
+
+# Email
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'zewdew69@gmail.com'
+EMAIL_HOST_PASSWORD = 'pedv ynmv lecb siyl'
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
