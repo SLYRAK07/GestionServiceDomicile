@@ -42,11 +42,9 @@ INSTALLED_APPS = [
     'corsheaders',
     'channels',
     'rest_framework_simplejwt.token_blacklist',
-    'psy'
-    #appli dyawli
-
     'reservations',
     'chat',
+
 ]
 
 MIDDLEWARE = [
