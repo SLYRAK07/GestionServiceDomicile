@@ -44,11 +44,11 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'reservations',
     'chat',
-    'acounts'
+    'accounts'
 
 ]
 
-AUTH_USER_MODEL = 'acounts.User'
+AUTH_USER_MODEL = 'accounts.User'
 
 
 MIDDLEWARE = [
@@ -60,6 +60,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'reservations.middleware.AuditLogMiddleware',
+    'accounts.middleware.BlocageCompteMiddleware',
 ]
 
 ROOT_URLCONF = 'service_adomicile.urls'
@@ -175,3 +177,30 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'zewdew69@gmail.com'
 EMAIL_HOST_PASSWORD = 'pedv ynmv lecb siyl'
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'audit_file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'logs/audit.log',
+        },
+    },
+    'loggers': {
+        'audit': {
+            'handlers': ['audit_file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
+
+
+# Sécurité
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'

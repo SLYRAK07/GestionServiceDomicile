@@ -5,7 +5,10 @@ from rest_framework.permissions import IsAuthenticated
 from .models import Reservation, Avis
 from .serializers import ReservationSerializer, AvisSerializer
 from .tasks import envoyer_email_reservation
+from django_ratelimit.decorators import ratelimit
+from django.utils.decorators import method_decorator
 
+@method_decorator(ratelimit(key='user', rate='10/m', method='POST', block=True), name='create')
 class ReservationViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     serializer_class = ReservationSerializer
