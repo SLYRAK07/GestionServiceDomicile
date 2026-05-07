@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 import os
+import dj_database_url
 from pathlib import Path
 from datetime import timedelta
 
@@ -93,15 +94,14 @@ ASGI_APPLICATION = 'service_adomicile.asgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'db_servi',
-        'USER': 'postgres',
-        'PASSWORD': 'ismail89Aa',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
+    'default': dj_database_url.config(
+        # Cette ligne lit la variable d'environnement sur Render.
+        # Si elle n'existe pas (en local), elle utilise ta config actuelle.
+        default=os.environ.get('DATABASE_URL', 'postgresql://admin:3pwniwAvpK6C4TJbZDnxqHy1jL5qexqb@dpg-d7uf4kdckfvc73b670a0-a/servihome_db'),
+        conn_max_age=600
+    )
 }
 
 
