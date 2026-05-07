@@ -1,20 +1,14 @@
 from django.urls import path
-from .views import RegisterView
+from .views import RegisterView, MyTokenObtainPairView, ProfileView, AdminUserListView, AdminToggleBanView, AdminStatsView
+from rest_framework_simplejwt.views import TokenRefreshView
 
 urlpatterns = [
     path('register/', RegisterView.as_view(), name='register'),
-]
-from django.urls import path
-from .views import RegisterView
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
-    TokenRefreshView,
-)
-
-urlpatterns = [
-    path('register/', RegisterView.as_view(), name='register'),
-    # C'est ici que l'utilisateur envoie son login/password pour recevoir ses Tokens
-    path('login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    # C'est ici qu'on renouvelle la clé quand elle expire
+    path('login/', MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('login/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('profile/', ProfileView.as_view(), name='profile'),
+    path('admin/users/', AdminUserListView.as_view(), name='admin_users'),
+    path('admin/users/<int:pk>/toggle-ban/', AdminToggleBanView.as_view(), name='admin_toggle_ban'),
+    path('admin/stats/', AdminStatsView.as_view(), name='admin_stats'),
+
 ]

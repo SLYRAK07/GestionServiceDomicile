@@ -25,5 +25,6 @@ urlpatterns = [
     path('api/', include('reservations.urls')),
     path('api/', include('chat.urls')),
     path('api/accounts/', include('accounts.urls')),
+    path('api/', include('services.urls')),
 ]
 

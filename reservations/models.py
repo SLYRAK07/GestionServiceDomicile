@@ -8,6 +8,8 @@ class Reservation(models.Model):
         ('confirmee', 'Confirmée'),
         ('annulee', 'Annulée'),
         ('terminee', 'Terminée'),
+        ('expiree', 'Expirée'),
+        ('refusee', 'Refusée'),
     ]
     client = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='reservations_client')
     prestataire = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='reservations_prestataire', null=True, blank=True)
