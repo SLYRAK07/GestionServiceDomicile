@@ -24,15 +24,18 @@ def envoyer_email_reservation(type_action, email_destinataire, reservation_id, n
 
     def send():
         try:
+            print(f"EMAIL_HOST_USER: {settings.EMAIL_HOST_USER}")
+            print(f"Envoi à: {email_destinataire}")
             send_mail(
                 subject=sujets.get(type_action, "Mise à jour ServiHome"),
                 message=messages.get(type_action, ""),
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[email_destinataire],
-                fail_silently=True,
+                fail_silently=False,
             )
-        except Exception:
-            pass
+            print("Email envoyé ✅")
+        except Exception as e:
+            print(f"Erreur email: {e}")
 
     thread = threading.Thread(target=send)
     thread.daemon = True
