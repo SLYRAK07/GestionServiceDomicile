@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'https://gestionservicedomicile.onrender.com/api';
+const API_URL = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000/api';
 
 const api = axios.create({
     baseURL: API_URL,
@@ -19,7 +19,6 @@ api.interceptors.request.use(
     },
     (error) => Promise.reject(error)
 );
-
 
 api.interceptors.response.use(
     (response) => response,
