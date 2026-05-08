@@ -179,7 +179,7 @@ CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
-    'https://gestionservicedomicile.onrender.com',
+    "https://gestionservicedomicile-front.onrender.com",
 ]
 
 # =========================
@@ -212,9 +212,8 @@ SIMPLE_JWT = {
 # CELERY / REDIS
 # =========================
 
-CELERY_BROKER_URL = 'redis://127.0.0.1:6379/0'
-
-CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/0'
+CELERY_BROKER_URL = os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379/0')
+CELERY_RESULT_BACKEND = os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379/0')
 
 CELERY_ACCEPT_CONTENT = ['json']
 
@@ -248,25 +247,16 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 LOGGING = {
     'version': 1,
-
     'disable_existing_loggers': False,
-
     'handlers': {
-        'audit_file': {
-            'level': 'INFO',
-
-            'class': 'logging.FileHandler',
-
-            'filename': BASE_DIR / 'logs/audit.log',
+        'console': {
+            'class': 'logging.StreamHandler',
         },
     },
-
     'loggers': {
         'audit': {
-            'handlers': ['audit_file'],
-
+            'handlers': ['console'],
             'level': 'INFO',
-
             'propagate': False,
         },
     },
