@@ -1,9 +1,7 @@
 from django.core.mail import send_mail
 from django.conf import settings
-from celery import shared_task
 
 
-@shared_task
 def envoyer_email_reservation(type_action, email_destinataire, reservation_id, nom_destinataire='', nom_autre=''):
     sujets = {
         'nouvelle': f"🔔 Nouvelle demande de service ServiHome #{reservation_id}",
@@ -28,5 +26,5 @@ def envoyer_email_reservation(type_action, email_destinataire, reservation_id, n
         message=messages.get(type_action, ""),
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=[email_destinataire],
-        fail_silently=False,
+        fail_silently=True,  # ← True pour éviter que l'email plante toute la requête
     )

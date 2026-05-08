@@ -20,30 +20,23 @@ class ReservationViewSet(viewsets.ModelViewSet):
             return Reservation.objects.filter(prestataire=user)
         return Reservation.objects.filter(client=user)
 
-
-
-
-
-
     def perform_create(self, serializer):
         reservation = serializer.save(client=self.request.user)
         if reservation.prestataire:
-            envoyer_email_reservation.delay(
+            envoyer_email_reservation(
                 'nouvelle',
                 reservation.prestataire.email,
                 reservation.id,
                 nom_destinataire=reservation.prestataire.username,
                 nom_autre=reservation.client.username
             )
-        envoyer_email_reservation.delay(
+        envoyer_email_reservation(
             'nouvelle_client',
             reservation.client.email,
             reservation.id,
             nom_destinataire=reservation.client.username,
             nom_autre=reservation.prestataire.username if reservation.prestataire else 'le prestataire'
         )
-
-
 
     def get_serializer(self, *args, **kwargs):
         kwargs['context'] = self.get_serializer_context()
@@ -52,8 +45,6 @@ class ReservationViewSet(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         now = timezone.now()
 
-        # Utiliser Reservation.objects directement pour attraper TOUTES les expirées
-        # peu importe le rôle de l'utilisateur connecté
         Reservation.objects.filter(
             statut='confirmee',
             date_service__lt=now
@@ -66,14 +57,14 @@ class ReservationViewSet(viewsets.ModelViewSet):
         for reservation in expirees:
             reservation.statut = 'expiree'
             reservation.save()
-            envoyer_email_reservation.delay(
+            envoyer_email_reservation(
                 'expiree',
                 reservation.client.email,
                 reservation.id,
                 nom_destinataire=reservation.client.username,
             )
             if reservation.prestataire:
-                envoyer_email_reservation.delay(
+                envoyer_email_reservation(
                     'expiree',
                     reservation.prestataire.email,
                     reservation.id,
@@ -82,14 +73,12 @@ class ReservationViewSet(viewsets.ModelViewSet):
 
         return super().list(request, *args, **kwargs)
 
-
-    #Action:Confirmer
     @action(detail=True, methods=['post'])
     def confirmer(self, request, pk=None):
         reservation = self.get_object()
         reservation.statut = 'confirmee'
         reservation.save()
-        envoyer_email_reservation.delay(
+        envoyer_email_reservation(
             'confirmee',
             reservation.client.email,
             reservation.id,
@@ -98,15 +87,12 @@ class ReservationViewSet(viewsets.ModelViewSet):
         )
         return Response({'message': 'Réservation confirmée'})
 
-
-
-    #Action:Refus
     @action(detail=True, methods=['post'])
     def refuser(self, request, pk=None):
         reservation = self.get_object()
         reservation.statut = 'refusee'
         reservation.save()
-        envoyer_email_reservation.delay(
+        envoyer_email_reservation(
             'refusee',
             reservation.client.email,
             reservation.id,
@@ -115,14 +101,12 @@ class ReservationViewSet(viewsets.ModelViewSet):
         )
         return Response({'message': 'Réservation refusée'})
 
-
-#action : annulee
     @action(detail=True, methods=['post'])
     def annuler(self, request, pk=None):
         reservation = self.get_object()
         reservation.statut = 'annulee'
         reservation.save()
-        envoyer_email_reservation.delay(
+        envoyer_email_reservation(
             'annulee',
             reservation.client.email,
             reservation.id,
@@ -130,7 +114,7 @@ class ReservationViewSet(viewsets.ModelViewSet):
             nom_autre=reservation.prestataire.username if reservation.prestataire else 'le prestataire'
         )
         if reservation.prestataire:
-            envoyer_email_reservation.delay(
+            envoyer_email_reservation(
                 'annulee',
                 reservation.prestataire.email,
                 reservation.id,
@@ -139,27 +123,20 @@ class ReservationViewSet(viewsets.ModelViewSet):
             )
         return Response({'message': 'Réservation annulée'})
 
-
-
     @action(detail=True, methods=['get'])
     def peut_noter(self, request, pk=None):
         reservation = self.get_object()
-
-        # Vérifier si déjà noté
         deja_note = Avis.objects.filter(reservation=reservation).exists()
         if deja_note:
             return Response({
                 'peut_noter': False,
                 'message': 'Vous avez déjà laissé un avis pour cette réservation.'
             })
-
-        # Vérifier statut terminée
         if reservation.statut != 'terminee':
             return Response({
                 'peut_noter': False,
                 'message': 'Vous ne pouvez noter qu\'une réservation terminée.'
             })
-
         return Response({
             'peut_noter': True,
             'message': 'Vous pouvez laisser un avis.'
