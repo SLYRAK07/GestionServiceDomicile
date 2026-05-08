@@ -38,5 +38,5 @@ def envoyer_email_reservation(type_action, email_destinataire, reservation_id, n
             print(f"Erreur email: {e}")
 
     thread = threading.Thread(target=send)
-    thread.daemon = True
+    thread.daemon = False
     thread.start()
