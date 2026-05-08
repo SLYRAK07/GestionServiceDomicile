@@ -1,5 +1,6 @@
 from django.core.mail import send_mail
 from django.conf import settings
+import threading
 
 
 def envoyer_email_reservation(type_action, email_destinataire, reservation_id, nom_destinataire='', nom_autre=''):
@@ -21,10 +22,18 @@ def envoyer_email_reservation(type_action, email_destinataire, reservation_id, n
         'expiree': f"Bonjour {nom_destinataire},\n\nVotre demande #{reservation_id} n'a pas reçu de réponse avant la date prévue et a été annulée automatiquement.\n\nVous pouvez faire une nouvelle demande sur ServiHome.\n\n— L'équipe ServiHome",
     }
 
-    send_mail(
-        subject=sujets.get(type_action, "Mise à jour ServiHome"),
-        message=messages.get(type_action, ""),
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[email_destinataire],
-        fail_silently=True,  # ← True pour éviter que l'email plante toute la requête
-    )
+    def send():
+        try:
+            send_mail(
+                subject=sujets.get(type_action, "Mise à jour ServiHome"),
+                message=messages.get(type_action, ""),
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[email_destinataire],
+                fail_silently=True,
+            )
+        except Exception:
+            pass
+
+    thread = threading.Thread(target=send)
+    thread.daemon = True
+    thread.start()
