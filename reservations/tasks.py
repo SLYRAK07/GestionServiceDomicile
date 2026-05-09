@@ -1,5 +1,8 @@
-from django.core.mail import send_mail, get_connection
+import sib_api_v3_sdk
+from sib_api_v3_sdk.rest import ApiException
 from django.conf import settings
+import threading
+import os
 
 
 def envoyer_email_reservation(type_action, email_destinataire, reservation_id, nom_destinataire='', nom_autre=''):
@@ -21,16 +24,29 @@ def envoyer_email_reservation(type_action, email_destinataire, reservation_id, n
         'expiree': f"Bonjour {nom_destinataire},\n\nVotre demande #{reservation_id} n'a pas reçu de réponse avant la date prévue et a été annulée automatiquement.\n\nVous pouvez faire une nouvelle demande sur ServiHome.\n\n— L'équipe ServiHome",
     }
 
-    try:
-        connection = get_connection(timeout=5)
-        send_mail(
-            subject=sujets.get(type_action, "Mise à jour ServiHome"),
-            message=messages.get(type_action, ""),
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[email_destinataire],
-            connection=connection,
-            fail_silently=True,
-        )
-        print(f"Email envoyé ✅ à {email_destinataire}")
-    except Exception as e:
-        print(f"Erreur email: {e}")
+    def send():
+        try:
+            configuration = sib_api_v3_sdk.Configuration()
+            configuration.api_key['api-key'] = os.environ.get('BREVO_API_KEY', '')
+
+            api_instance = sib_api_v3_sdk.TransactionalEmailsApi(
+                sib_api_v3_sdk.ApiClient(configuration)
+            )
+
+            email = sib_api_v3_sdk.SendSmtpEmail(
+                to=[{"email": email_destinataire, "name": nom_destinataire}],
+                sender={"email": os.environ.get('EMAIL_HOST_USER', ''), "name": "ServiHome"},
+                subject=sujets.get(type_action, "Mise à jour ServiHome"),
+                text_content=messages.get(type_action, ""),
+            )
+
+            api_instance.send_transac_email(email)
+            print(f"Email envoyé ✅ à {email_destinataire}")
+        except ApiException as e:
+            print(f"Erreur Brevo API: {e}")
+        except Exception as e:
+            print(f"Erreur email: {e}")
+
+    thread = threading.Thread(target=send)
+    thread.daemon = False
+    thread.start()
