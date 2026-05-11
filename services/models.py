@@ -15,6 +15,11 @@ class Categorie(models.Model):
 
 
 class Service(models.Model):
+    STATUT_CHOICES = [
+        ('en_attente', 'En attente'),
+        ('approuve', 'Approuvé'),
+        ('refuse', 'Refusé'),
+    ]
     prestataire = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -31,6 +36,7 @@ class Service(models.Model):
     prix = models.DecimalField(max_digits=10, decimal_places=2)
     disponible = models.BooleanField(default=True)
     date_creation = models.DateTimeField(auto_now_add=True)
+    statut = models.CharField(max_length=20, choices=STATUT_CHOICES, default='en_attente')
 
     def note_moyenne(self):
         from reservations.models import Avis

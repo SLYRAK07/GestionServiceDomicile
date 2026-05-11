@@ -13,6 +13,7 @@ import PrestataireDashboard from './pages/PrestataireDashboard';
 import Admin from './pages/Admin';
 import NotFound from './pages/NotFound';
 import Profile from "./pages/Profile";
+import CompleteProfile from './pages/CompleteProfile';
 
 
 const PrivateRoute = ({ children, role }) => {
@@ -61,11 +62,14 @@ function App() {
 
                         {/* Prestataire */}
                         <Route path="/prestataire" element={<PrivateRoute role="prestataire"><PrestataireDashboard /></PrivateRoute>} />
+                        <Route path="/complete-profile" element={<PrivateRoute role="prestataire"><CompleteProfile /></PrivateRoute>} />
 
                         {/* Admin */}
                         <Route path="/app-admin" element={<PrivateRoute role="admin"><Admin /></PrivateRoute>} />
-                        {/*Profile*/}
+
+                        {/* Profile */}
                         <Route path="/profile" element={<Profile />} />
+
                         {/* 404 */}
                         <Route path="*" element={<NotFound />} />
                     </Routes>

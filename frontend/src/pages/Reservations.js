@@ -11,6 +11,7 @@ function Reservations() {
     const [showAvisModal, setShowAvisModal] = useState(false);
     const [reservationAvis, setReservationAvis] = useState(null);
     const [avisData, setAvisData] = useState({ note: 5, commentaire: '' });
+    const [filtreActif, setFiltreActif] = useState('tous');
 
     useEffect(() => {
         fetchReservations();
@@ -39,19 +40,19 @@ function Reservations() {
     };
 
     const checkPeutNoter = async (reservation) => {
-    try {
-        const res = await api.get(`/reservations/${reservation.id}/peut_noter/`);
-        if (res.data.peut_noter) {
-            setReservationAvis(reservation);
-            setShowAvisModal(true);
-        } else {
-            setError(res.data.message);
-            setTimeout(() => setError(''), 4000);
+        try {
+            const res = await api.get(`/reservations/${reservation.id}/peut_noter/`);
+            if (res.data.peut_noter) {
+                setReservationAvis(reservation);
+                setShowAvisModal(true);
+            } else {
+                setError(res.data.message);
+                setTimeout(() => setError(''), 4000);
+            }
+        } catch (err) {
+            setError('Erreur lors de la vérification.');
         }
-    } catch (err) {
-        setError('Erreur lors de la vérification.');
-    }
-};
+    };
 
     const handleSoumettreAvis = async (e) => {
         e.preventDefault();
@@ -97,23 +98,46 @@ function Reservations() {
             case 'confirmee': return '✅ Confirmée';
             case 'annulee': return '❌ Annulée';
             case 'expiree': return '⏰ Expirée';
-            case 'refusee': return '⏰ Refusée';
+            case 'refusee': return '🚫 Refusée';
             case 'terminee': return '🏁 Terminée';
             default: return statut;
         }
     };
 
-    const enAttente = reservations.filter(r => r.statut === 'en_attente');
-    const confirmees = reservations.filter(r => r.statut === 'confirmee');
-    const terminees = reservations.filter(r => r.statut === 'terminee');
-    const historique = reservations.filter(r => ['annulee', 'terminee'].includes(r.statut));
+    const filtres = [
+        { key: 'tous', label: 'TOUTES' },
+        { key: 'en_attente', label: '⏳ EN ATTENTE' },
+        { key: 'confirmee', label: '✅ CONFIRMÉES' },
+        { key: 'terminee', label: '🏁 TERMINÉES' },
+        { key: 'refusee', label: '🚫 REFUSÉES' },
+        { key: 'annulee', label: '❌ ANNULÉES' },
+        { key: 'expiree', label: '⏰ EXPIRÉES' },
+    ];
+
+    const ordreStatut = ['en_attente', 'confirmee', 'terminee', 'expiree', 'annulee', 'refusee'];
+
+    const reservationsFiltrees = filtreActif === 'tous'
+    ? [...reservations].sort((a, b) => ordreStatut.indexOf(a.statut) - ordreStatut.indexOf(b.statut))
+    : reservations.filter(r => r.statut === filtreActif);
+
+    const getBorderColor = (statut) => {
+        switch (statut) {
+            case 'en_attente': return '#ffc107';
+            case 'confirmee': return '#28a745';
+            case 'terminee': return '#C5A059';
+            case 'annulee': return '#dc3545';
+            case 'refusee': return '#ff6b35';
+            case 'expiree': return '#ff6b35';
+            default: return '#C5A059';
+        }
+    };
 
     return (
         <div style={{ backgroundColor: '#080808', paddingTop: '100px', minHeight: '100vh' }}>
             <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 40px 80px' }}>
 
                 {/* Header */}
-                <div style={{ textAlign: 'center', marginBottom: '60px' }}>
+                <div style={{ textAlign: 'center', marginBottom: '50px' }}>
                     <p style={{ color: '#C5A059', fontSize: '0.6rem', letterSpacing: '6px', marginBottom: '15px' }}>
                         MON ESPACE
                     </p>
@@ -121,6 +145,38 @@ function Reservations() {
                         Mes Réservations
                     </h1>
                     <div style={{ width: '60px', height: '1px', background: '#C5A059', margin: '20px auto' }}></div>
+                </div>
+
+                {/* Filtres */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'center', marginBottom: '50px' }}>
+                    {filtres.map(f => (
+                        <button
+                            key={f.key}
+                            onClick={() => setFiltreActif(f.key)}
+                            style={{
+                                background: 'transparent',
+                                border: filtreActif === f.key ? '1px solid #C5A059' : '1px solid rgba(197,160,89,0.2)',
+                                color: filtreActif === f.key ? '#C5A059' : 'rgba(232,224,208,0.4)',
+                                padding: '8px 20px',
+                                fontSize: '0.6rem',
+                                letterSpacing: '2px',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease',
+                            }}
+                        >
+                            {f.label}
+                            {f.key !== 'tous' && (
+                                <span style={{ marginLeft: '6px', opacity: 0.6 }}>
+                                    ({reservations.filter(r => r.statut === f.key).length})
+                                </span>
+                            )}
+                            {f.key === 'tous' && (
+                                <span style={{ marginLeft: '6px', opacity: 0.6 }}>
+                                    ({reservations.length})
+                                </span>
+                            )}
+                        </button>
+                    ))}
                 </div>
 
                 {/* Messages */}
@@ -139,140 +195,59 @@ function Reservations() {
                     <div style={{ textAlign: 'center', padding: '100px', color: '#C5A059', letterSpacing: '4px' }}>
                         CHARGEMENT...
                     </div>
-                ) : reservations.length === 0 ? (
+                ) : reservationsFiltrees.length === 0 ? (
                     <div style={{ textAlign: 'center', padding: '80px' }}>
                         <p style={{ fontSize: '4rem', marginBottom: '20px' }}>📭</p>
                         <p style={{ color: 'rgba(232,224,208,0.3)', fontSize: '0.9rem', letterSpacing: '3px', marginBottom: '30px' }}>
-                            AUCUNE RÉSERVATION POUR LE MOMENT
+                            AUCUNE RÉSERVATION {filtreActif !== 'tous' ? `"${getStatutLabel(filtreActif).toUpperCase()}"` : ''}
                         </p>
-                        <button className="gold-button" style={{ padding: '15px 40px' }}
-                            onClick={() => navigate('/services')}>
-                            TROUVER UN PRESTATAIRE
-                        </button>
+                        {filtreActif === 'tous' && (
+                            <button className="gold-button" style={{ padding: '15px 40px' }}
+                                onClick={() => navigate('/services')}>
+                                TROUVER UN PRESTATAIRE
+                            </button>
+                        )}
                     </div>
                 ) : (
-                    <>
-                        {/* En attente */}
-                        {enAttente.length > 0 && (
-                            <div style={{ marginBottom: '60px' }}>
-                                <p style={{ color: '#ffc107', fontSize: '0.6rem', letterSpacing: '5px', marginBottom: '25px' }}>
-                                    ⏳ EN ATTENTE DE CONFIRMATION — {enAttente.length} réservation(s)
-                                </p>
-                                <div style={styles.grid}>
-                                    {enAttente.map(r => (
-                                        <div key={r.id} className="glass-card" style={{ ...styles.card, borderLeft: '2px solid #ffc107' }}>
-                                            <div style={styles.cardTop}>
-                                                <span style={{ color: 'rgba(232,224,208,0.4)', fontSize: '0.65rem', letterSpacing: '2px' }}>
-                                                    RÉSERVATION #{r.id}
-                                                </span>
-                                                <span style={{ ...getStatutStyle(r.statut), padding: '4px 12px', fontSize: '0.6rem', letterSpacing: '2px' }}>
-                                                    {getStatutLabel(r.statut)}
-                                                </span>
-                                            </div>
-                                            <p style={styles.adresse}>📍 {r.adresse}</p>
-                                            <p style={styles.date}>📅 {formatDate(r.date_service)}</p>
-                                            <button
-                                                className="gold-button"
-                                                style={{ width: '100%', marginTop: '20px', fontSize: '0.65rem', borderColor: 'rgba(220,53,69,0.5)', color: '#dc3545' }}
-                                                onClick={() => handleAnnuler(r.id)}
-                                            >
-                                                ❌ ANNULER
-                                            </button>
-                                        </div>
-                                    ))}
+                    <div style={styles.grid}>
+                        {reservationsFiltrees.map(r => (
+                            <div key={r.id} className="glass-card" style={{
+                                ...styles.card,
+                                borderLeft: `2px solid ${getBorderColor(r.statut)}`,
+                                opacity: ['annulee', 'expiree', 'refusee'].includes(r.statut) ? 0.7 : 1,
+                            }}>
+                                <div style={styles.cardTop}>
+                                    <span style={{ color: 'rgba(232,224,208,0.4)', fontSize: '0.65rem', letterSpacing: '2px' }}>
+                                        RÉSERVATION #{r.id}
+                                    </span>
+                                    <span style={{ ...getStatutStyle(r.statut), padding: '4px 12px', fontSize: '0.6rem', letterSpacing: '2px' }}>
+                                        {getStatutLabel(r.statut)}
+                                    </span>
                                 </div>
-                            </div>
-                        )}
+                                <p style={styles.adresse}>📍 {r.adresse}</p>
+                                <p style={styles.date}>📅 {formatDate(r.date_service)}</p>
 
-                        {/* Confirmées */}
-                        {confirmees.length > 0 && (
-                            <div style={{ marginBottom: '60px' }}>
-                                <p style={{ color: '#28a745', fontSize: '0.6rem', letterSpacing: '5px', marginBottom: '25px' }}>
-                                    ✅ CONFIRMÉES — {confirmees.length} réservation(s)
-                                </p>
-                                <div style={styles.grid}>
-                                    {confirmees.map(r => (
-                                        <div key={r.id} className="glass-card" style={{ ...styles.card, borderLeft: '2px solid #28a745' }}>
-                                            <div style={styles.cardTop}>
-                                                <span style={{ color: 'rgba(232,224,208,0.4)', fontSize: '0.65rem', letterSpacing: '2px' }}>
-                                                    RÉSERVATION #{r.id}
-                                                </span>
-                                                <span style={{ ...getStatutStyle(r.statut), padding: '4px 12px', fontSize: '0.6rem', letterSpacing: '2px' }}>
-                                                    {getStatutLabel(r.statut)}
-                                                </span>
-                                            </div>
-                                            <p style={styles.adresse}>📍 {r.adresse}</p>
-                                            <p style={styles.date}>📅 {formatDate(r.date_service)}</p>
-                                            <button
-                                                className="gold-button"
-                                                style={{ width: '100%', marginTop: '20px', fontSize: '0.65rem' }}
-                                                onClick={() => checkPeutNoter(r)}
-                                            >
-                                                ★ LAISSER UN AVIS
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
+                                {r.statut === 'en_attente' && (
+                                    <button
+                                        className="gold-button"
+                                        style={{ width: '100%', marginTop: '20px', fontSize: '0.65rem', borderColor: 'rgba(220,53,69,0.5)', color: '#dc3545' }}
+                                        onClick={() => handleAnnuler(r.id)}
+                                    >
+                                        ❌ ANNULER
+                                    </button>
+                                )}
+                                {(r.statut === 'confirmee' || r.statut === 'terminee') && (
+                                    <button
+                                        className="gold-button"
+                                        style={{ width: '100%', marginTop: '20px', fontSize: '0.65rem' }}
+                                        onClick={() => checkPeutNoter(r)}
+                                    >
+                                        ★ LAISSER UN AVIS
+                                    </button>
+                                )}
                             </div>
-                        )}
-
-                        {/* Terminée*/}
-                        {terminees.length > 0 && (
-                         <div style={{ marginBottom: '60px' }}>
-                          <p style={{ color: '#C5A059', fontSize: '0.6rem', letterSpacing: '5px', marginBottom: '25px' }}>
-                               🏁 TERMINÉES — {terminees.length} réservation(s)
-                          </p>
-        <div style={styles.grid}>
-            {terminees.map(r => (
-                <div key={r.id} className="glass-card" style={{ ...styles.card, borderLeft: '2px solid #C5A059' }}>
-                    <div style={styles.cardTop}>
-                        <span style={{ color: 'rgba(232,224,208,0.4)', fontSize: '0.65rem', letterSpacing: '2px' }}>
-                            RÉSERVATION #{r.id}
-                        </span>
-                        <span style={{ color: '#C5A059', border: '1px solid #C5A059', padding: '4px 12px', fontSize: '0.6rem', letterSpacing: '2px' }}>
-                            🏁 Terminée
-                        </span>
+                        ))}
                     </div>
-                    <p style={styles.adresse}>📍 {r.adresse}</p>
-                    <p style={styles.date}>📅 {formatDate(r.date_service)}</p>
-                    <button
-                        className="gold-button"
-                        style={{ width: '100%', marginTop: '20px', fontSize: '0.65rem' }}
-                        onClick={() => checkPeutNoter(r)}
-                    >
-                        ★ LAISSER UN AVIS
-                    </button>
-                </div>
-            ))}
-        </div>
-    </div>
-)}
-
-                        {/* Historique */}
-                        {historique.length > 0 && (
-                            <div>
-                                <p style={{ color: 'rgba(232,224,208,0.3)', fontSize: '0.6rem', letterSpacing: '5px', marginBottom: '25px' }}>
-                                    🏁 HISTORIQUE — {historique.length} réservation(s)
-                                </p>
-                                <div style={styles.grid}>
-                                    {historique.map(r => (
-                                        <div key={r.id} className="glass-card" style={{ ...styles.card, opacity: 0.6 }}>
-                                            <div style={styles.cardTop}>
-                                                <span style={{ color: 'rgba(232,224,208,0.4)', fontSize: '0.65rem', letterSpacing: '2px' }}>
-                                                    RÉSERVATION #{r.id}
-                                                </span>
-                                                <span style={{ ...getStatutStyle(r.statut), padding: '4px 12px', fontSize: '0.6rem', letterSpacing: '2px' }}>
-                                                    {getStatutLabel(r.statut)}
-                                                </span>
-                                            </div>
-                                            <p style={styles.adresse}>📍 {r.adresse}</p>
-                                            <p style={styles.date}>📅 {formatDate(r.date_service)}</p>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                    </>
                 )}
             </div>
 
@@ -294,7 +269,6 @@ function Reservations() {
                         </div>
 
                         <form onSubmit={handleSoumettreAvis} style={{ display: 'flex', flexDirection: 'column', gap: '25px' }}>
-                            {/* Étoiles */}
                             <div>
                                 <label style={styles.label}>VOTRE NOTE</label>
                                 <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
@@ -321,7 +295,6 @@ function Reservations() {
                                 </p>
                             </div>
 
-                            {/* Commentaire */}
                             <div>
                                 <label style={styles.label}>COMMENTAIRE</label>
                                 <textarea

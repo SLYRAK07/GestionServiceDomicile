@@ -30,9 +30,9 @@ class ServiceSerializer(serializers.ModelSerializer):
             'id', 'titre', 'description', 'prix',
             'disponible', 'date_creation',
             'prestataire', 'categorie', 'categorie_id',
-            'note_moyenne'
+            'note_moyenne', 'statut'
         ]
-        read_only_fields = ['prestataire', 'date_creation']
+        read_only_fields = ['prestataire', 'date_creation', 'statut']
 
     def get_note_moyenne(self, obj):
         return obj.note_moyenne()
