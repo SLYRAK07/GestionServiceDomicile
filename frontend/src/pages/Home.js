@@ -1,33 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import api from '../services/api';
+import Chatbot from '../components/Chatbot';
 
 function Home() {
     const { user } = useAuth();
     const navigate = useNavigate();
-    const [recommandations, setRecommandations] = useState([]);
 
-    useEffect(() => {
-        api.get('/services/recommandations/')
-            .then(res => setRecommandations(res.data))
-            .catch(() => {});
-    }, []);
 
-    const renderStars = (note) => {
-        return [1, 2, 3, 4, 5].map(n => (
-            <span key={n} style={{ color: n <= Math.round(note) ? '#C5A059' : 'rgba(197,160,89,0.2)' }}>★</span>
-        ));
-    };
 
-    const getMedaille = (index) => {
-        switch (index) {
-            case 0: return { emoji: '🥇', label: '1ER', color: '#FFD700' };
-            case 1: return { emoji: '🥈', label: '2ÈME', color: '#C0C0C0' };
-            case 2: return { emoji: '🥉', label: '3ÈME', color: '#CD7F32' };
-            default: return { emoji: '⭐', label: `${index + 1}ÈME`, color: '#C5A059' };
-        }
-    };
 
     return (
         <div style={{ backgroundColor: '#080808' }}>
@@ -132,126 +113,8 @@ function Home() {
                 </div>
             </section>
 
-            {/* RECOMMANDATIONS IA */}
-            {recommandations.length > 0 && (
-                <section style={{ padding: '120px 10%', backgroundColor: '#050505', textAlign: 'center' }}>
-                    <p style={{ color: '#C5A059', fontSize: '0.6rem', letterSpacing: '6px', marginBottom: '15px' }}>
-                        INTELLIGENCE ARTIFICIELLE
-                    </p>
-                    <h2 className="luxury-font" style={{ fontSize: '3rem', color: '#e8e0d0', marginBottom: '10px' }}>
-                        Nos Experts Recommandés
-                    </h2>
-                    <div style={{ width: '60px', height: '1px', background: '#C5A059', margin: '20px auto 15px' }}></div>
-                    <p style={{ color: 'rgba(232,224,208,0.3)', fontSize: '0.75rem', letterSpacing: '2px', marginBottom: '60px' }}>
-                        Sélectionnés par notre algorithme IA selon la note, la fiabilité, le prix et l'analyse des avis
-                    </p>
-
-                    <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: `repeat(${Math.min(recommandations.length, 3)}, 1fr)`,
-                        gap: '25px',
-                        maxWidth: '1100px',
-                        margin: '0 auto',
-                    }}>
-                        {recommandations.slice(0, 3).map((s, i) => {
-                            const medaille = getMedaille(i);
-                            return (
-                                <div key={s.id} className="glass-card" style={{
-                                    padding: '40px 30px',
-                                    textAlign: 'center',
-                                    borderTop: `2px solid ${medaille.color}`,
-                                    position: 'relative',
-                                }}>
-                                    {/* Médaille */}
-                                    <div style={{
-                                        position: 'absolute',
-                                        top: '-20px',
-                                        left: '50%',
-                                        transform: 'translateX(-50%)',
-                                        background: '#080808',
-                                        border: `1px solid ${medaille.color}`,
-                                        padding: '5px 15px',
-                                        fontSize: '0.55rem',
-                                        letterSpacing: '3px',
-                                        color: medaille.color,
-                                    }}>
-                                        {medaille.emoji} {medaille.label}
-                                    </div>
-
-                                    {/* Avatar */}
-                                    <div style={{
-                                        width: '70px', height: '70px',
-                                        borderRadius: '50%',
-                                        border: `2px solid ${medaille.color}`,
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        color: medaille.color,
-                                        fontSize: '1.8rem',
-                                        margin: '20px auto 15px',
-                                        background: 'rgba(197,160,89,0.05)',
-                                        fontFamily: 'Cormorant Garamond, serif',
-                                    }}>
-                                        {s.prestataire?.username?.charAt(0).toUpperCase()}
-                                    </div>
-
-                                    {/* Nom */}
-                                    <p style={{ color: '#e8e0d0', fontSize: '1rem', letterSpacing: '2px', marginBottom: '5px' }}>
-                                        {s.prestataire?.username}
-                                    </p>
-
-                                    {/* Catégorie */}
-                                    <p style={{ color: '#C5A059', fontSize: '0.6rem', letterSpacing: '3px', marginBottom: '15px' }}>
-                                        {s.categorie?.icone} {s.categorie?.nom}
-                                    </p>
-
-                                    {/* Titre service */}
-                                    <p style={{ color: 'rgba(232,224,208,0.6)', fontSize: '0.8rem', marginBottom: '15px', fontStyle: 'italic' }}>
-                                        {s.titre}
-                                    </p>
-
-                                    {/* Stars */}
-                                    <div style={{ marginBottom: '8px', fontSize: '1.1rem' }}>
-                                        {renderStars(s.note_moyenne)}
-                                    </div>
-                                    <p style={{ color: '#C5A059', fontSize: '0.85rem', fontFamily: 'Cormorant Garamond, serif', marginBottom: '15px' }}>
-                                        {s.note_moyenne > 0 ? s.note_moyenne.toFixed(1) : '—'}/5
-                                    </p>
-
-                                    {/* Prix */}
-                                    <p style={{ color: 'rgba(232,224,208,0.4)', fontSize: '0.75rem', marginBottom: '15px' }}>
-                                        {s.prix} MAD/h
-                                    </p>
-
-                                    {/* Score IA */}
-                                    <div style={{
-                                        background: 'rgba(197,160,89,0.05)',
-                                        border: '1px solid rgba(197,160,89,0.15)',
-                                        padding: '8px',
-                                        marginBottom: '20px',
-                                    }}>
-                                        <p style={{ color: 'rgba(232,224,208,0.3)', fontSize: '0.55rem', letterSpacing: '2px', marginBottom: '4px' }}>
-                                            SCORE IA
-                                        </p>
-                                        <p style={{ color: medaille.color, fontSize: '1.1rem', fontFamily: 'Cormorant Garamond, serif' }}>
-                                            {(s.score_ia * 100).toFixed(1)}%
-                                        </p>
-                                    </div>
-
-                                    <button
-                                        className="gold-button"
-                                        style={{ width: '100%', padding: '12px', fontSize: '0.6rem' }}
-                                        onClick={() => navigate('/services')}
-                                    >
-                                        RÉSERVER
-                                    </button>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </section>
-            )}
-
             {/* COMMENT CA MARCHE */}
-            <section style={{ padding: '120px 10%', backgroundColor: recommandations.length > 0 ? '#080808' : '#050505', textAlign: 'center' }}>
+            <section style={{ padding: '120px 10%', backgroundColor: '#050505', textAlign: 'center' }}>
                 <p style={{ color: '#C5A059', fontSize: '0.6rem', letterSpacing: '6px', marginBottom: '15px' }}>PROCESSUS</p>
                 <h2 className="luxury-font" style={{ fontSize: '3rem', color: '#e8e0d0', marginBottom: '10px' }}>Comment ça marche</h2>
                 <div style={{ width: '60px', height: '1px', background: '#C5A059', margin: '20px auto 60px' }}></div>
@@ -320,6 +183,7 @@ function Home() {
                     </div>
                 </section>
             )}
+            <Chatbot />
         </div>
     );
 }
